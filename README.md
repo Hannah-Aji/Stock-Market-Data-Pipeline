@@ -1,2 +1,3 @@
-# Stock-Market-Data-Pipelinefor-
-Automated Stock Price Monitoring and Analysis
+# Stock-Market-Data-Pipeline
+Automated Stock Price Monitoring and Analysis using Python and SQL
+
