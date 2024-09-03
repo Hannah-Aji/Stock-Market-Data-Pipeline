@@ -1,8 +1,6 @@
 # Stock-Market-Data-Pipeline
 Automated Stock Price Monitoring and Analysis using Python and SQL
 
-# Stock Market Data Pipeline
-
 ## Overview
 This project provides an automated pipeline to fetch, process, and analyze stock market data. The pipeline is designed to collect daily stock prices from the Alpha Vantage API, compute key technical indicators (such as moving averages, volatility, and RSI), and save the results for further analysis or visualization.
 
@@ -40,8 +38,31 @@ Investigate how changes in trading volume correspond with price movements to con
 ### Installation Steps
 1. Clone the repository or download the script.
 2. Install the required Python packages:
+3. Obtain an API key from Alpha Vantage.
+4. Replace 'your_api_key' in the script with your actual API key.
+5. Customize the SYMBOL variable with the stock symbol you're interested in.
 
    ```bash
    pip install requests pandas
+
+## Usage
+1. Run the script to fetch and process stock data:
+
+   ```bash
+   python stock_data_pipeline.py
+
+2. The script will save the processed data to a CSV file (stock_data.csv) in the same directory.
+
+3. Analyze the CSV file using your preferred data analysis or visualization tool (e.g., Excel, Tableau, Power BI).
+
+## Scheduling
+To automate the pipeline, I scheduled the script to run at regular intervals using a task scheduler (Task Scheduler on Windows).
+To run the script daily at 6 PM using cron:
+
+  ```bash
+  crontab -e
+  0 18 * * * /usr/bin/python3 /path/to/your/stock_data_pipeline.py
+
+
 
 
