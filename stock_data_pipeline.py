@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 import time
 
-# Constants
+# Constants here
 API_KEY = 'your_api_key'  # Replace with your Alpha Vantage API key
 SYMBOL = 'AAPL'  # Replace with the stock symbol you want to track
 BASE_URL = 'https://www.alphavantage.co/query'
