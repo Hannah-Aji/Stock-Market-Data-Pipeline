@@ -63,25 +63,21 @@ def save_data(df, symbol):
     conn.close()
     print(f'Data saved to SQLite database as table: {symbol}')
 
-# Function to perform SQL queries
-def query_data():
+# Function to execute SQL from file
+def execute_sql_from_file(file_path):
     conn = sqlite3.connect('stock_data.db')
-    query = """
-    SELECT Date, Close, SMA_50, SMA_200
-    FROM AAPL
-    WHERE Date > '2023-01-01'
-    ORDER BY Date DESC;
-    """
-    result = pd.read_sql(query, conn)
-    print(result)
+    with open(file_path, 'r') as sql_file:
+        sql_script = sql_file.read()
+    conn.executescript(sql_script)
     conn.close()
+    print(f'SQL script {file_path} executed successfully.')
 
 # Main function
 def main():
     raw_data = fetch_stock_data(API_KEY, SYMBOL)
     processed_data = process_stock_data(raw_data)
     save_data(processed_data, SYMBOL)
-    query_data()
+    execute_sql_from_file('queries.sql')
 
 if __name__ == '__main__':
     main()
