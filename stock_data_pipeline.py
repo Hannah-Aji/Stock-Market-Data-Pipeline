@@ -1,51 +1,48 @@
-<<<<<<< HEAD
 import requests
 import pandas as pd
-import time
+import sqlite3
+from datetime import datetime
 
-# Constants
-API_KEY = 'your_api_key'  # Replace with your Alpha Vantage API key
-SYMBOL = 'AAPL'  # Replace with the stock symbol you want to track
-BASE_URL = 'https://www.alphavantage.co/query'
-CSV_FILE_PATH = 'stock_data.csv'
+# Define your Alpha Vantage API key and stock symbol
+API_KEY = 'your_api_key'
+SYMBOL = 'AAPL'
 
-def fetch_stock_data(symbol, api_key):
-    """Fetch daily stock data from Alpha Vantage API."""
-    params = {
-        'function': 'TIME_SERIES_DAILY',
-        'symbol': symbol,
-        'apikey': api_key
-    }
-    response = requests.get(BASE_URL, params=params)
+# Function to fetch stock data from Alpha Vantage
+def fetch_stock_data(api_key, symbol):
+    url = f'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&outputsize=full&apikey={api_key}'
+    response = requests.get(url)
     data = response.json()
-    
-    # Handle potential API errors
-    if "Error Message" in data:
-        raise Exception(f"Error fetching data: {data['Error Message']}")
-    
-    time_series = data['Time Series (Daily)']
-    df = pd.DataFrame(time_series).T
+    return data['Time Series (Daily)']
+
+# Function to process the data
+def process_stock_data(raw_data):
+    # Convert the JSON data to a DataFrame
+    df = pd.DataFrame.from_dict(raw_data, orient='index')
     df = df.rename(columns={
-        '1. open': 'open',
-        '2. high': 'high',
-        '3. low': 'low',
-        '4. close': 'close',
-        '5. volume': 'volume'
+        '1. open': 'Open',
+        '2. high': 'High',
+        '3. low': 'Low',
+        '4. close': 'Close',
+        '5. adjusted close': 'Adj Close',
+        '6. volume': 'Volume'
     })
     df.index = pd.to_datetime(df.index)
-    df = df.astype(float)
+    df = df.sort_index()
+
+    # Convert columns to numeric types
+    df = df.apply(pd.to_numeric)
+
+    # Calculate technical indicators
+    df['SMA_50'] = df['Adj Close'].rolling(window=50).mean()
+    df['SMA_200'] = df['Adj Close'].rolling(window=200).mean()
+    df['Volatility'] = df['Adj Close'].rolling(window=20).std()
+    df['Returns'] = df['Adj Close'].pct_change()
+    df['RSI'] = calculate_rsi(df['Adj Close'])
+
     return df
 
-def calculate_technical_indicators(df):
-    """Calculate moving averages, volatility, and RSI."""
-    df['SMA_50'] = df['close'].rolling(window=50).mean()
-    df['SMA_200'] = df['close'].rolling(window=200).mean()
-    df['Volatility'] = df['close'].pct_change().rolling(window=20).std()
-    df['RSI'] = compute_rsi(df['close'], 14)
-    return df
-
-def compute_rsi(series, period):
-    """Compute the Relative Strength Index (RSI)."""
+# Function to calculate RSI (Relative Strength Index)
+def calculate_rsi(series, period=14):
     delta = series.diff(1)
     gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
@@ -53,89 +50,38 @@ def compute_rsi(series, period):
     rsi = 100 - (100 / (1 + rs))
     return rsi
 
-def save_to_csv(df, file_path):
-    """Save DataFrame to a CSV file."""
-    df.to_csv(file_path, index=True)
-    print(f"Data saved to {file_path}")
+# Function to save data to CSV and SQLite database
+def save_data(df, symbol):
+    # Save to CSV
+    csv_file = f'{symbol}_stock_data.csv'
+    df.to_csv(csv_file)
+    print(f'Data saved to {csv_file}')
 
+    # Save to SQLite database
+    conn = sqlite3.connect('stock_data.db')
+    df.to_sql(symbol, conn, if_exists='replace', index=True)
+    conn.close()
+    print(f'Data saved to SQLite database as table: {symbol}')
+
+# Function to perform SQL queries
+def query_data():
+    conn = sqlite3.connect('stock_data.db')
+    query = """
+    SELECT Date, Close, SMA_50, SMA_200
+    FROM AAPL
+    WHERE Date > '2023-01-01'
+    ORDER BY Date DESC;
+    """
+    result = pd.read_sql(query, conn)
+    print(result)
+    conn.close()
+
+# Main function
 def main():
-    try:
-        df = fetch_stock_data(SYMBOL, API_KEY)
-        df = calculate_technical_indicators(df)
-        save_to_csv(df, CSV_FILE_PATH)
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    raw_data = fetch_stock_data(API_KEY, SYMBOL)
+    processed_data = process_stock_data(raw_data)
+    save_data(processed_data, SYMBOL)
+    query_data()
 
 if __name__ == '__main__':
     main()
-=======
-import requests
-import pandas as pd
-import time
-
-# Constants
-API_KEY = 'your_api_key'  # Replace with your Alpha Vantage API key
-SYMBOL = 'AAPL'  # Replace with the stock symbol you want to track
-BASE_URL = 'https://www.alphavantage.co/query'
-CSV_FILE_PATH = 'stock_data.csv'
-
-def fetch_stock_data(symbol, api_key):
-    """Fetch daily stock data from Alpha Vantage API."""
-    params = {
-        'function': 'TIME_SERIES_DAILY',
-        'symbol': symbol,
-        'apikey': api_key
-    }
-    response = requests.get(BASE_URL, params=params)
-    data = response.json()
-    
-    # Handle potential API errors
-    if "Error Message" in data:
-        raise Exception(f"Error fetching data: {data['Error Message']}")
-    
-    time_series = data['Time Series (Daily)']
-    df = pd.DataFrame(time_series).T
-    df = df.rename(columns={
-        '1. open': 'open',
-        '2. high': 'high',
-        '3. low': 'low',
-        '4. close': 'close',
-        '5. volume': 'volume'
-    })
-    df.index = pd.to_datetime(df.index)
-    df = df.astype(float)
-    return df
-
-def calculate_technical_indicators(df):
-    """Calculate moving averages, volatility, and RSI."""
-    df['SMA_50'] = df['close'].rolling(window=50).mean()
-    df['SMA_200'] = df['close'].rolling(window=200).mean()
-    df['Volatility'] = df['close'].pct_change().rolling(window=20).std()
-    df['RSI'] = compute_rsi(df['close'], 14)
-    return df
-
-def compute_rsi(series, period):
-    """Compute the Relative Strength Index (RSI)."""
-    delta = series.diff(1)
-    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
-    rs = gain / loss
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
-
-def save_to_csv(df, file_path):
-    """Save DataFrame to a CSV file."""
-    df.to_csv(file_path, index=True)
-    print(f"Data saved to {file_path}")
-
-def main():
-    try:
-        df = fetch_stock_data(SYMBOL, API_KEY)
-        df = calculate_technical_indicators(df)
-        save_to_csv(df, CSV_FILE_PATH)
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-if __name__ == '__main__':
-    main()
->>>>>>> 69362a2f24ec2c5e5eaf00828d5094f4018cdb18
