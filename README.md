@@ -55,13 +55,8 @@ Investigate how changes in trading volume correspond with price movements to con
 
 3. Analyze the CSV file using your preferred data analysis or visualization tool (e.g., Excel, Tableau, Power BI).
 
-## Scheduling
-To automate the pipeline, I scheduled the script to run at regular intervals using a task scheduler (Task Scheduler on Windows).
-To run the script daily at 6 PM using cron:
 
-  ```bash
-  crontab -e
-  0 18 * * * /usr/bin/python3 /path/to/your/stock_data_pipeline.py
+
 
 
 
